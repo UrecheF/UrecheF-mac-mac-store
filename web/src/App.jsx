@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from "react";
 import {
   Search, Menu, X, MessageCircle, MapPin, ChevronRight,
@@ -68,8 +69,8 @@ function App() {
 
       <header className="header">
         <a className="brand" href="#inicio">
-          <div className="brand-logo">
-            <span>JM</span>
+          <div className="brand-logo real-logo">
+            <img src="/mac-mac-logo.png" alt="Mac & Mac Store" />
           </div>
           <div className="brand-text">
             <strong>MAC & MAC</strong>
@@ -341,7 +342,7 @@ function App() {
 
       <footer>
         <div className="footer-brand">
-          <div className="brand-logo"><span>JM</span></div>
+          <div className="brand-logo real-logo"><img src="/mac-mac-logo.png" alt="Mac & Mac Store" /></div>
           <div>
             <strong>MAC & MAC STORE</strong>
             <span>Tecnología que eleva tu estilo.</span>
