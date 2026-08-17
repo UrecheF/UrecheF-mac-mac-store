@@ -1,0 +1,33 @@
+
+ * Esperando en cola... 
+ * Cargando listado de paquetes.... 
+Los paquetes siguientes deben instalarse:
+ python3-ROPGadget-7.4-5.fc41.noarch	A tool to find ROP gadgets in program files
+ python3-bcrypt-4.1.2-5.fc41.x86_64	Modern password hashing for your software and your servers
+ python3-capstone-5.0.1-6.fc41.noarch	Python3 bindings for capstone
+ python3-colored-traceback-0.3.0-11.fc41.noarch	A library to color exception traces
+ python3-intervaltree-3.1.0-14.fc41.noarch	A mutable, self-balancing interval tree for Python
+ python3-paramiko-3.5.1-1.fc41.noarch	SSH2 protocol library for python
+ python3-plumbum-1.7.2-10.fc41.noarch	Shell combinators library
+ python3-psutil-5.9.8-4.fc41.x86_64	A process and system utilities module for Python
+ python3-pwntools-4.13.1-1.fc41.noarch	A CTF framework and exploit development library
+ python3-pyasn1-0.6.0-3.fc41.noarch	ASN.1 tools for Python 3
+ python3-pyelftools-0.31-3.fc41.noarch	Pure-Python library for parsing and analyzing ELF files
+ python3-pygments-2.18.0-2.fc41.noarch	Syntax highlighting engine written in Python
+ python3-pynacl-1.5.0-9.fc41.x86_64	Python binding to the Networking and Cryptography (NaCl) library
+ python3-pyserial-3.5-10.fc41.noarch	Python serial port access library
+ python3-rpyc-6.0.1-1.fc41.noarch	Transparent, Symmetrical Python Library for Distributed-Computing
+ python3-sortedcontainers-2.4.0-18.fc41.noarch	Pure Python sorted container types
+ python3-unicorn-2.0.1.post1-7.fc41.x86_64	Files needed to develop applications using unicorn
+ python3-unix-ar-0.2.1-1.fc41.noarch	.ar file handling for Python (including .deb)
+ python3-zstandard-0.23.0-1.fc41.x86_64	Zstandard bindings for Python
+ unicorn-2.0.1.post1-7.fc41.x86_64	Lightweight multi-platform, multi-architecture CPU emulator framework
+
+ * Esperando en cola... 
+ * Esperando autenticación... 
+ * Esperando en cola... 
+ * Descargando paquetes... 
+ * Solicitando datos... 
+ * Comprobando modificaciones... 
+ * Instalando paquetes... 
+
