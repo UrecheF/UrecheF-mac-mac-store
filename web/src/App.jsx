@@ -1,10 +1,14 @@
 import { useMemo, useState } from "react";
-import { Search, Menu, X, MessageCircle, MapPin, ChevronRight, Star } from "lucide-react";
+import {
+  Search, Menu, X, MessageCircle, MapPin, ChevronRight,
+  Star, Smartphone, Laptop, Watch, Headphones, Cable,
+  Gem, RefreshCcw, ShieldCheck, Truck, Camera
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { products, categories } from "./data/products";
 import "./index.css";
 
-const WHATSAPP = "573000000000";
+const WHATSAPP = "573202781315";
 
 const money = (value) =>
   new Intl.NumberFormat("es-CO", {
@@ -12,6 +16,16 @@ const money = (value) =>
     currency: "COP",
     maximumFractionDigits: 0,
   }).format(value);
+
+const categoryIcons = {
+  Todos: Star,
+  iPhone: Smartphone,
+  Samsung: Smartphone,
+  Computadores: Laptop,
+  Smartwatch: Watch,
+  Audio: Headphones,
+  Accesorios: Cable,
+};
 
 function App() {
   const [category, setCategory] = useState("Todos");
@@ -32,24 +46,35 @@ function App() {
 
   const whatsapp = (product) => {
     const text = encodeURIComponent(
-      `Hola Mac & Mac Store 👋 Estoy interesado en ${product.name} ${product.capacity}. ¿Está disponible?`
+      `Hola Mac & Mac Store 👋\n\nEstoy interesado en:\n${product.name} ${product.capacity}\n\n¿Me pueden confirmar disponibilidad y precio?`
     );
     window.open(`https://wa.me/${WHATSAPP}?text=${text}`, "_blank");
   };
 
+  const generalWhatsApp = () => {
+    window.open(
+      `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
+        "Hola Mac & Mac Store 👋 Quiero información sobre sus productos."
+      )}`,
+      "_blank"
+    );
+  };
+
   return (
     <div className="app">
-      <div className="topbar">
-        Envíos a toda Colombia · Atención personalizada · Productos con garantía
+      <div className="announcement">
+        <span>✦</span> Envíos a toda Colombia <span>•</span> Atención personalizada <span>•</span> Productos seleccionados
       </div>
 
       <header className="header">
-        <a className="brand" href="#">
-          <span className="brand-mark">M</span>
-          <span>
+        <a className="brand" href="#inicio">
+          <div className="brand-logo">
+            <span>JM</span>
+          </div>
+          <div className="brand-text">
             <strong>MAC & MAC</strong>
             <small>STORE</small>
-          </span>
+          </div>
         </a>
 
         <nav className={menu ? "nav open" : "nav"}>
@@ -60,15 +85,10 @@ function App() {
         </nav>
 
         <div className="header-actions">
-          <a
-            className="whatsapp-small"
-            href={`https://wa.me/${WHATSAPP}`}
-            target="_blank"
-            rel="noreferrer"
-          >
+          <button className="header-whatsapp" onClick={generalWhatsApp}>
             <MessageCircle size={18} />
             WhatsApp
-          </a>
+          </button>
 
           <button className="menu-button" onClick={() => setMenu(!menu)}>
             {menu ? <X /> : <Menu />}
@@ -78,57 +98,84 @@ function App() {
 
       <main>
         <section id="inicio" className="hero">
+          <div className="hero-glow glow-one" />
+          <div className="hero-glow glow-two" />
+
           <div className="hero-content">
-            <span className="eyebrow">TECNOLOGÍA · CONFIANZA · SERVICIO</span>
+            <div className="hero-label">
+              <span className="gold-dot" />
+              TECNOLOGÍA QUE ELEVA TU ESTILO
+            </div>
+
             <h1>
-              La tecnología que
-              <span> quieres.</span>
+              Tecnología.
+              <br />
+              <span>Valor.</span>
+              <br />
+              Confianza.
             </h1>
+
             <p>
-              Encuentra celulares, computadores, audio, accesorios y mucho más
-              en Mac & Mac Store.
+              Descubre celulares, computadores, accesorios y dispositivos
+              inteligentes seleccionados para ti.
             </p>
 
             <div className="hero-buttons">
-              <a href="#catalogo" className="button primary">
-                Ver catálogo <ChevronRight size={19} />
+              <a href="#catalogo" className="button gold-button">
+                Explorar catálogo <ChevronRight size={18} />
               </a>
 
-              <a
-                href={`https://wa.me/${WHATSAPP}`}
-                target="_blank"
-                rel="noreferrer"
-                className="button secondary"
-              >
-                <MessageCircle size={19} />
+              <button className="button dark-button" onClick={generalWhatsApp}>
+                <MessageCircle size={18} />
                 Comprar por WhatsApp
-              </a>
+              </button>
             </div>
 
-            <div className="hero-info">
-              <span><Star size={16} fill="currentColor" /> Atención personalizada</span>
-              <span><Star size={16} fill="currentColor" /> Productos seleccionados</span>
+            <div className="hero-features">
+              <span><ShieldCheck size={17} /> Productos seleccionados</span>
+              <span><Truck size={17} /> Envíos a Colombia</span>
+              <span><Star size={17} /> Atención premium</span>
             </div>
           </div>
 
-          <div className="hero-device">
-            <div className="device-card">
-              <div className="device-screen">
-                <span>MAC & MAC</span>
-                <strong>TECNOLOGÍA</strong>
+          <div className="hero-visual">
+            <div className="gold-ring ring-one" />
+            <div className="gold-ring ring-two" />
+
+            <div className="hero-phone">
+              <div className="phone-camera">
+                <i /><i /><i />
+              </div>
+              <div className="phone-screen">
+                <small>MAC & MAC</small>
+                <strong>STORE</strong>
+                <span>TECNOLOGÍA QUE<br />ELEVA TU ESTILO</span>
               </div>
             </div>
+
+            <div className="floating-card">
+              <span>MAC & MAC</span>
+              <strong>PREMIUM</strong>
+            </div>
           </div>
+        </section>
+
+        <section className="trust-strip">
+          <div><ShieldCheck /><span><strong>Compra segura</strong>Productos seleccionados</span></div>
+          <div><Truck /><span><strong>Envíos nacionales</strong>A toda Colombia</span></div>
+          <div><Star /><span><strong>Atención premium</strong>Siempre para ti</span></div>
+          <div><MessageCircle /><span><strong>Asesoría directa</strong>Por WhatsApp</span></div>
         </section>
 
         <section id="catalogo" className="catalog">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">NUESTROS PRODUCTOS</span>
-              <h2>Catálogo</h2>
+              <span className="section-label">NUESTRO CATÁLOGO</span>
+              <h2>Encuentra lo que buscas.</h2>
+              <p>Productos de tecnología seleccionados para ti.</p>
             </div>
 
-            <div className="search">
+            <div className="search-box">
               <Search size={19} />
               <input
                 value={search}
@@ -139,32 +186,46 @@ function App() {
           </div>
 
           <div className="categories">
-            {categories.map((item) => (
-              <button
-                key={item.name}
-                className={category === item.name ? "category active" : "category"}
-                onClick={() => setCategory(item.name)}
-              >
-                <span>{item.icon}</span>
-                {item.name}
-              </button>
-            ))}
+            {categories.map((item) => {
+              const Icon = categoryIcons[item.name] || Smartphone;
+
+              return (
+                <button
+                  key={item.name}
+                  className={category === item.name ? "category active" : "category"}
+                  onClick={() => setCategory(item.name)}
+                >
+                  <Icon size={17} />
+                  {item.name}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="catalog-meta">
+            <span>{filtered.length} productos disponibles</span>
+            <span className="gold-line" />
           </div>
 
           <div className="products-grid">
-            {filtered.map((product) => (
+            {filtered.map((product, index) => (
               <motion.article
                 key={product.id}
                 className="product-card"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 25 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04 }}
                 viewport={{ once: true }}
               >
                 <div className="product-image">
-                  <div className="placeholder-device">
+                  <div className={`product-device ${product.category === "Samsung" ? "samsung" : ""}`}>
+                    <div className="device-camera"><i /><i /><i /></div>
                     <span>{product.category === "Samsung" ? "S" : ""}</span>
                   </div>
-                  {product.featured && <span className="badge">Destacado</span>}
+
+                  {product.featured && (
+                    <div className="product-badge">DESTACADO</div>
+                  )}
                 </div>
 
                 <div className="product-info">
@@ -172,84 +233,107 @@ function App() {
                   <h3>{product.name}</h3>
                   <p>{product.capacity}</p>
 
-                  <strong className="price">{money(product.price)}</strong>
-
-                  <button
-                    className="buy-button"
-                    onClick={() => whatsapp(product)}
-                  >
-                    <MessageCircle size={17} />
-                    Consultar disponibilidad
-                  </button>
+                  <div className="product-bottom">
+                    <strong>{money(product.price)}</strong>
+                    <button onClick={() => whatsapp(product)} aria-label="Consultar">
+                      <MessageCircle size={17} />
+                    </button>
+                  </div>
                 </div>
               </motion.article>
             ))}
           </div>
+        </section>
 
-          {filtered.length === 0 && (
-            <div className="empty">
-              No encontramos productos con esa búsqueda.
-            </div>
-          )}
+        <section className="premium-banner">
+          <div>
+            <span className="section-label">MAC & MAC STORE</span>
+            <h2>Tu próxima tecnología<br /><span>empieza aquí.</span></h2>
+            <p>Compra con confianza y recibe atención personalizada.</p>
+          </div>
+          <button className="button gold-button" onClick={generalWhatsApp}>
+            Hablar con un asesor <ChevronRight size={18} />
+          </button>
         </section>
 
         <section id="servicios" className="services">
-          <div>
-            <span className="eyebrow">MUCHO MÁS QUE UNA TIENDA</span>
-            <h2>Servicios Mac & Mac</h2>
-            <p>
-              También compramos tecnología y metales preciosos y ofrecemos
-              soluciones de empeño.
-            </p>
+          <div className="section-heading service-heading">
+            <div>
+              <span className="section-label">SERVICIOS</span>
+              <h2>Mucho más que tecnología.</h2>
+              <p>Soluciones para tus equipos y tus bienes.</p>
+            </div>
           </div>
 
           <div className="service-grid">
-            <div className="service">
-              <span>💎</span>
+            <div className="service-card">
+              <div className="service-icon"><Gem /></div>
+              <span>01</span>
               <h3>Compra de oro y joyas</h3>
-              <p>Valoramos tus piezas de manera profesional.</p>
+              <p>Evaluamos oro, plata, joyas y metales preciosos.</p>
+              <button onClick={generalWhatsApp}>Consultar <ChevronRight size={16} /></button>
             </div>
 
-            <div className="service">
-              <span>♻️</span>
+            <div className="service-card">
+              <div className="service-icon"><RefreshCcw /></div>
+              <span>02</span>
               <h3>Empeños</h3>
-              <p>Convierte tus bienes en liquidez de forma rápida.</p>
+              <p>Obtén liquidez utilizando tus bienes como respaldo.</p>
+              <button onClick={generalWhatsApp}>Consultar <ChevronRight size={16} /></button>
             </div>
 
-            <div className="service">
-              <span>📱</span>
+            <div className="service-card">
+              <div className="service-icon"><Smartphone /></div>
+              <span>03</span>
               <h3>Compra de tecnología</h3>
-              <p>Evaluamos celulares, computadores y otros equipos.</p>
+              <p>Compramos celulares, computadores y dispositivos.</p>
+              <button onClick={generalWhatsApp}>Consultar <ChevronRight size={16} /></button>
             </div>
           </div>
         </section>
 
         <section id="contacto" className="contact">
-          <div>
-            <span className="eyebrow">VISÍTANOS</span>
-            <h2>Estamos para ayudarte.</h2>
+          <div className="contact-content">
+            <span className="section-label">CONTACTO</span>
+            <h2>Estamos cerca de ti.</h2>
             <p>
-              Escríbenos por WhatsApp para consultar disponibilidad, precios o
-              cualquier producto que estés buscando.
+              ¿Buscas un equipo específico? Escríbenos y uno de nuestros
+              asesores te ayudará.
             </p>
 
-            <a
-              className="button primary"
-              href={`https://wa.me/${WHATSAPP}`}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <button className="button gold-button" onClick={generalWhatsApp}>
               <MessageCircle size={19} />
-              Hablar por WhatsApp
-            </a>
+              +57 320 278 1315
+            </button>
           </div>
 
-          <div className="location">
-            <MapPin size={25} />
-            <div>
-              <strong>Talaigua Nuevo, Bolívar</strong>
-              <p>Cl. 14 # 7-94</p>
-              <p>Lunes a sábado · 8:00 a. m. – 12:00 p. m. / 2:00 p. m. – 6:00 p. m.</p>
+          <div className="contact-card">
+            <div className="contact-row">
+              <MapPin />
+              <div>
+                <small>VISÍTANOS</small>
+                <strong>Cl. 14 # 7-94</strong>
+                <span>Talaigua Nuevo, Bolívar, Colombia</span>
+              </div>
+            </div>
+
+            <div className="contact-row">
+              <Watch />
+              <div>
+                <small>HORARIO</small>
+                <strong>Lunes a sábado</strong>
+                <span>8:00 a. m. – 12:00 p. m.</span>
+                <span>2:00 p. m. – 6:00 p. m.</span>
+              </div>
+            </div>
+
+            <div className="contact-row">
+              <Camera />
+              <div>
+                <small>INSTAGRAM</small>
+                <strong>@macstore0</strong>
+                <span>Encuéntranos en redes sociales</span>
+              </div>
             </div>
           </div>
         </section>
@@ -257,17 +341,21 @@ function App() {
 
       <footer>
         <div className="footer-brand">
-          <strong>MAC & MAC STORE</strong>
-          <span>Tecnología, valor y confianza.</span>
+          <div className="brand-logo"><span>JM</span></div>
+          <div>
+            <strong>MAC & MAC STORE</strong>
+            <span>Tecnología que eleva tu estilo.</span>
+          </div>
         </div>
 
         <div className="footer-links">
+          <a href="#inicio">Inicio</a>
           <a href="#catalogo">Catálogo</a>
           <a href="#servicios">Servicios</a>
           <a href="#contacto">Contacto</a>
         </div>
 
-        <p>© 2026 Mac & Mac Store. Todos los derechos reservados.</p>
+        <p>© 2026 Mac & Mac Store</p>
       </footer>
     </div>
   );
