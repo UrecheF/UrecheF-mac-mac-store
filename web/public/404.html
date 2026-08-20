@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mac & Mac Store</title>
+  <script>
+    const base = '/UrecheF-mac-mac-store/';
+    const path = window.location.pathname.replace(base, '/');
+    const query = window.location.search;
+    sessionStorage.setItem('spa-redirect', path + query + window.location.hash);
+    window.location.replace(base);
+  </script>
+</head>
+<body>
+  Cargando Mac & Mac Store…
+</body>
+</html>
