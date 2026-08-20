@@ -15,15 +15,25 @@ function normalizeProduct(product) {
     product.storageGb ? `${product.storageGb}GB` : null,
   ].filter(Boolean);
 
+  let category = categoryMap[product.category] || product.category || "Otros";
+  if (product.category === "phone" && product.brand === "Apple") category = "iPhone";
+  if (product.category === "phone" && product.brand === "Samsung") category = "Samsung";
+
   return {
     ...product,
     id: String(product.id),
     name: product.name || "Producto Mac & Mac",
-    category: categoryMap[product.category] || product.category || "Otros",
+    category,
     capacity: specs.join(" · ") || "",
     price: Number(product.price) || 0,
     available: product.active !== false && Number(product.stock ?? 1) > 0,
-    featured: false,
+    featured: [
+      "iPhone 17 Pro Max 1TB",
+      "iPhone 17 Pro Max 512GB",
+      "iPhone 17 Pro Max 256GB",
+      "Samsung S25 Ultra 256GB",
+      "Samsung S25 Ultra 512GB",
+    ].includes(product.name),
   };
 }
 
