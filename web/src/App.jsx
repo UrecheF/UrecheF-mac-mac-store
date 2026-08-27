@@ -246,7 +246,7 @@ function App() {
                   <p>{product.capacity || product.condition || ""}</p>
                   <div className="product-bottom">
                     <strong>{money(product.price)}</strong>
-                    <button onClick={() => whatsapp(product)} aria-label="Consultar"><MessageCircle size={17} /></button>
+                    <button className="product-whatsapp" onClick={() => whatsapp(product)} aria-label={`Comprar ${product.name} por WhatsApp`}><MessageCircle size={17} /><span>Comprar por WhatsApp</span></button>
                   </div>
                 </div>
               </motion.article>
