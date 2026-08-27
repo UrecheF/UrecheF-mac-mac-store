@@ -96,20 +96,19 @@ function App() {
     });
   }, [products, category, search]);
 
+  const openWhatsApp = (message) => {
+    const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const whatsapp = (product) => {
-    const text = encodeURIComponent(
+    openWhatsApp(
       `Hola Mac & Mac Store 👋\n\nEstoy interesado en:\n${product.name} ${product.capacity}\n\n¿Me pueden confirmar disponibilidad y precio?`
     );
-    window.open(`https://wa.me/${WHATSAPP}?text=${text}`, "_blank");
   };
 
   const generalWhatsApp = () => {
-    window.open(
-      `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
-        "Hola Mac & Mac Store 👋 Quiero información sobre sus productos."
-      )}`,
-      "_blank"
-    );
+    openWhatsApp("Hola Mac & Mac Store 👋 Quiero información sobre sus productos.");
   };
 
   return (
