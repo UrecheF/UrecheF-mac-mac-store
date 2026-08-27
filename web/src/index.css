@@ -444,16 +444,21 @@ a { color: inherit; text-decoration: none; }
 }
 .product-bottom strong { font-size: 16px; }
 .product-bottom button {
-  width: 35px;
-  height: 35px;
-  display: grid;
-  place-items: center;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 12px;
   border: 0;
-  border-radius: 50%;
+  border-radius: 9px;
   color: #fff;
   background: #111;
+  font-size: 10px;
+  font-weight: 800;
 }
 .product-bottom button:hover { background: #bd9140; }
+.product-whatsapp span { white-space: nowrap; }
 
 .premium-banner {
   margin: 0 8% 105px;
@@ -581,6 +586,9 @@ footer > p { color: #666; font-size: 9px; }
   .product-info { padding: 12px; }
   .product-info h3 { font-size: 13px; }
   .product-bottom strong { font-size: 13px; }
+  .product-bottom { align-items: stretch; flex-direction: column; gap: 10px; }
+  .product-bottom button { width: 100%; min-height: 42px; }
+  .product-info p { min-height: 26px; margin-bottom: 12px; }
   .premium-banner { margin: 0 6% 70px; padding: 35px 25px; flex-direction: column; align-items: flex-start; }
   .service-grid, .contact { grid-template-columns: 1fr; }
   footer { padding: 30px 6%; flex-direction: column; align-items: flex-start; }
