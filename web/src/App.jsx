@@ -114,6 +114,7 @@ function App() {
 
   return (
     <div className="app">
+      <a className="skip-link" href="#catalogo">Saltar al catálogo</a>
       <div className="announcement">
         <span>✦</span> Envíos a toda Colombia <span>•</span> Atención personalizada <span>•</span> Productos seleccionados
       </div>
@@ -121,7 +122,7 @@ function App() {
       <header className="header">
         <a className="brand" href="#inicio">
           <div className="brand-logo real-logo">
-            <img src="/mac-mac-logo.png" alt="Mac & Mac Store" />
+            <img src="/mac-mac-logo.png" alt="Mac & Mac Store" decoding="async" />
           </div>
           <div className="brand-text">
             <strong>MAC & MAC</strong>
@@ -299,7 +300,7 @@ function App() {
       </main>
 
       <footer>
-        <div className="footer-brand"><div className="brand-logo real-logo"><img src="/mac-mac-logo.png" alt="Mac & Mac Store" /></div><div><strong>MAC & MAC STORE</strong><span>Tecnología que eleva tu estilo.</span></div></div>
+        <div className="footer-brand"><div className="brand-logo real-logo"><img src="/mac-mac-logo.png" alt="Mac & Mac Store" loading="lazy" decoding="async" /></div><div><strong>MAC & MAC STORE</strong><span>Tecnología que eleva tu estilo.</span></div></div>
         <div className="footer-links"><a href="#inicio">Inicio</a><a href="#catalogo">Catálogo</a><a href="#servicios">Servicios</a><a href="#contacto">Contacto</a></div>
         <p>© 2026 Mac & Mac Store</p>
       </footer>
