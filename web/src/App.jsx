@@ -71,6 +71,8 @@ function App() {
   const categories = useMemo(() => buildCommerceCategories(products), [products]);
 
   const filtered = useMemo(() => {
+    const query = normalizeSearch(search);
+
     return products.filter((product) => {
       const matchesCategory =
         category === "Todos" || product.category === category;
@@ -78,7 +80,6 @@ function App() {
       const text = normalizeSearch(
         `${product.name} ${product.category} ${product.capacity} ${product.brand || ""}`
       );
-      const query = normalizeSearch(search);
 
       return matchesCategory && text.includes(query);
     });
@@ -232,7 +233,7 @@ function App() {
           ) : (
           <div className="products-grid">
             {filtered.map((product, index) => (
-              <motion.article key={product.id} className="product-card" initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} viewport={{ once: true }}>
+              <motion.article key={product.id} className="product-card" initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(index, 8) * 0.04 }} viewport={{ once: true }}>
                 <div className="product-image">
                   <div className={`product-device ${product.brand === "Samsung" ? "samsung" : ""}`}>
                     <div className="device-camera"><i /><i /><i /></div>
