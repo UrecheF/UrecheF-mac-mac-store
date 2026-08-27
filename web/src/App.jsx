@@ -68,6 +68,17 @@ function App() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    if (!menu) return undefined;
+
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setMenu(false);
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [menu]);
+
   const categories = useMemo(() => buildCommerceCategories(products), [products]);
 
   const filtered = useMemo(() => {
@@ -118,7 +129,7 @@ function App() {
           </div>
         </a>
 
-        <nav className={menu ? "nav open" : "nav"}>
+        <nav id="main-navigation" aria-label="Navegación principal" className={menu ? "nav open" : "nav"}>
           <a href="#inicio" onClick={() => setMenu(false)}>Inicio</a>
           <a href="#catalogo" onClick={() => setMenu(false)}>Catálogo</a>
           <a href="#servicios" onClick={() => setMenu(false)}>Servicios</a>
@@ -130,8 +141,15 @@ function App() {
             <MessageCircle size={18} />
             WhatsApp
           </button>
-          <button className="menu-button" onClick={() => setMenu(!menu)}>
-            {menu ? <X /> : <Menu />}
+          <button
+            type="button"
+            className="menu-button"
+            onClick={() => setMenu(!menu)}
+            aria-expanded={menu}
+            aria-controls="main-navigation"
+            aria-label={menu ? "Cerrar menú" : "Abrir menú"}
+          >
+            {menu ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
           </button>
         </div>
       </header>
