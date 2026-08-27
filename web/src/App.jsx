@@ -18,6 +18,14 @@ const money = (value) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+const normalizeSearch = (value = "") =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
 const categoryIcons = {
   Todos: Star,
   iPhone: Smartphone,
@@ -67,10 +75,12 @@ function App() {
       const matchesCategory =
         category === "Todos" || product.category === category;
 
-      const text =
-        `${product.name} ${product.category} ${product.capacity} ${product.brand || ""}`.toLowerCase();
+      const text = normalizeSearch(
+        `${product.name} ${product.category} ${product.capacity} ${product.brand || ""}`
+      );
+      const query = normalizeSearch(search);
 
-      return matchesCategory && text.includes(search.toLowerCase());
+      return matchesCategory && text.includes(query);
     });
   }, [products, category, search]);
 
@@ -169,7 +179,22 @@ function App() {
             </div>
             <div className="search-box">
               <Search size={19} />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar producto..." />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar producto..."
+                aria-label="Buscar productos"
+              />
+              {search && (
+                <button
+                  type="button"
+                  className="search-clear"
+                  onClick={() => setSearch("")}
+                  aria-label="Limpiar búsqueda"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -190,6 +215,21 @@ function App() {
             <span>{catalogStatus === "live" ? "Catálogo en tiempo real" : catalogStatus === "loading" ? "Conectando catálogo…" : "Catálogo local"}</span>
           </div>
 
+          {filtered.length === 0 ? (
+            <div className="empty-catalog" role="status" aria-live="polite">
+              <Search size={28} />
+              <h3>No encontramos ese producto</h3>
+              <p>Prueba otra marca, modelo o capacidad. También podemos ayudarte directamente.</p>
+              <div className="empty-actions">
+                <button type="button" onClick={() => { setSearch(""); setCategory("Todos"); }}>
+                  Ver todo el catálogo
+                </button>
+                <button type="button" onClick={generalWhatsApp}>
+                  <MessageCircle size={16} /> Consultar por WhatsApp
+                </button>
+              </div>
+            </div>
+          ) : (
           <div className="products-grid">
             {filtered.map((product, index) => (
               <motion.article key={product.id} className="product-card" initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} viewport={{ once: true }}>
@@ -212,6 +252,7 @@ function App() {
               </motion.article>
             ))}
           </div>
+          )}
         </section>
 
         <section className="premium-banner">
