@@ -81,6 +81,21 @@ function App() {
 
   const categories = useMemo(() => buildCommerceCategories(products), [products]);
 
+  const navigateCategories = (event, index) => {
+    const lastIndex = categories.length - 1;
+    const nextIndex = {
+      ArrowRight: Math.min(index + 1, lastIndex),
+      ArrowLeft: Math.max(index - 1, 0),
+      Home: 0,
+      End: lastIndex,
+    }[event.key];
+
+    if (nextIndex === undefined || nextIndex === index) return;
+    event.preventDefault();
+    setCategory(categories[nextIndex].name);
+    event.currentTarget.parentElement.children[nextIndex]?.focus();
+  };
+
   const filtered = useMemo(() => {
     const query = normalizeSearch(search);
 
@@ -222,13 +237,14 @@ function App() {
           </div>
 
           <div className="categories" role="group" aria-label="Filtrar productos por categoría">
-            {categories.map((item) => {
+            {categories.map((item, index) => {
               const Icon = categoryIcons[item.name] || Smartphone;
               return (
                 <button
                   key={item.name}
                   className={category === item.name ? "category active" : "category"}
                   onClick={() => setCategory(item.name)}
+                  onKeyDown={(event) => navigateCategories(event, index)}
                   aria-pressed={category === item.name}
                 >
                   <Icon size={17} />{item.name}
