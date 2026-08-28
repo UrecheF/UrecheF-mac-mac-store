@@ -611,6 +611,9 @@ footer > p { color: #666; font-size: 9px; }
   .catalog, .services, .contact { padding: 70px 6%; }
   .section-heading { flex-direction: column; align-items: stretch; }
   .search-box { width: 100%; }
+  .catalog-meta { flex-wrap: wrap; gap: 9px; }
+  .catalog-meta .gold-line { width: 28px; }
+  .reset-filters { width: 100%; justify-content: center; margin-left: 0; }
   .products-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
   .product-image { height: 210px; }
   .product-device { width: 75px; height: 140px; }
