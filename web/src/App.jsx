@@ -221,7 +221,12 @@ function App() {
             {categories.map((item) => {
               const Icon = categoryIcons[item.name] || Smartphone;
               return (
-                <button key={item.name} className={category === item.name ? "category active" : "category"} onClick={() => setCategory(item.name)}>
+                <button
+                  key={item.name}
+                  className={category === item.name ? "category active" : "category"}
+                  onClick={() => setCategory(item.name)}
+                  aria-pressed={category === item.name}
+                >
                   <Icon size={17} />{item.name}
                 </button>
               );
@@ -229,7 +234,9 @@ function App() {
           </div>
 
           <div className="catalog-meta">
-            <span>{filtered.length} productos disponibles</span>
+            <span role="status" aria-live="polite" aria-atomic="true">
+              {filtered.length} productos disponibles
+            </span>
             <span className="gold-line" />
             <span>{catalogStatus === "live" ? "Catálogo en tiempo real" : catalogStatus === "loading" ? "Conectando catálogo…" : "Catálogo local"}</span>
           </div>
