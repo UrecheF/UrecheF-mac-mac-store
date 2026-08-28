@@ -237,8 +237,17 @@ function App() {
             <span role="status" aria-live="polite" aria-atomic="true">
               {filtered.length} productos disponibles
             </span>
-            <span className="gold-line" />
+            <span className="gold-line" aria-hidden="true" />
             <span>{catalogStatus === "live" ? "Catálogo en tiempo real" : catalogStatus === "loading" ? "Conectando catálogo…" : "Catálogo local"}</span>
+            {(search || category !== "Todos") && (
+              <button
+                type="button"
+                className="reset-filters"
+                onClick={() => { setSearch(""); setCategory("Todos"); }}
+              >
+                <X size={14} aria-hidden="true" /> Restablecer filtros
+              </button>
+            )}
           </div>
 
           {filtered.length === 0 ? (
