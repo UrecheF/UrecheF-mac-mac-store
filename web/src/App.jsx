@@ -199,10 +199,14 @@ function App() {
             <div className="search-box">
               <Search size={19} />
               <input
+                type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar producto..."
                 aria-label="Buscar productos"
+                enterKeyHint="search"
+                autoComplete="off"
+                spellCheck="false"
               />
               {search && (
                 <button
