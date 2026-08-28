@@ -221,7 +221,7 @@ function App() {
             </div>
           </div>
 
-          <div className="categories">
+          <div className="categories" role="group" aria-label="Filtrar productos por categoría">
             {categories.map((item) => {
               const Icon = categoryIcons[item.name] || Smartphone;
               return (
