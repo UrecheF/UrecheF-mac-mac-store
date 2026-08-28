@@ -320,9 +320,17 @@ a { color: inherit; text-decoration: none; }
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 12px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #c59a45 #f2f2f2;
+  -webkit-overflow-scrolling: touch;
 }
+.categories::-webkit-scrollbar { height: 5px; }
+.categories::-webkit-scrollbar-track { background: #f2f2f2; border-radius: 999px; }
+.categories::-webkit-scrollbar-thumb { background: #c59a45; border-radius: 999px; }
 .category {
   flex: 0 0 auto;
+  scroll-snap-align: start;
   display: flex;
   align-items: center;
   gap: 7px;
