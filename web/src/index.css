@@ -624,6 +624,15 @@ footer > p { color: #666; font-size: 9px; }
   display: block;
 }
 
+:where(a, button, input):focus-visible {
+  outline: 3px solid #d6ab52;
+  outline-offset: 3px;
+}
+
+.search-box input:focus-visible {
+  outline: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
