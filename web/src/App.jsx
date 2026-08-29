@@ -43,6 +43,7 @@ function App() {
   const [products, setProducts] = useState(fallbackProducts);
   const [category, setCategory] = useState("Todos");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("recommended");
   const [menu, setMenu] = useState(false);
   const [catalogStatus, setCatalogStatus] = useState("loading");
 
@@ -110,6 +111,24 @@ function App() {
       return matchesCategory && text.includes(query);
     });
   }, [products, category, search]);
+
+  const visibleProducts = useMemo(() => {
+    if (sort === "price-asc") {
+      return [...filtered].sort((a, b) => a.price - b.price);
+    }
+
+    if (sort === "price-desc") {
+      return [...filtered].sort((a, b) => b.price - a.price);
+    }
+
+    if (sort === "name") {
+      return [...filtered].sort((a, b) =>
+        a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+      );
+    }
+
+    return filtered;
+  }, [filtered, sort]);
 
   const openWhatsApp = (message) => {
     const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`;
@@ -259,6 +278,15 @@ function App() {
             </span>
             <span className="gold-line" aria-hidden="true" />
             <span>{catalogStatus === "live" ? "Catálogo en tiempo real" : catalogStatus === "loading" ? "Conectando catálogo…" : "Catálogo local"}</span>
+            <label className="sort-control">
+              <span>Ordenar</span>
+              <select value={sort} onChange={(event) => setSort(event.target.value)}>
+                <option value="recommended">Recomendados</option>
+                <option value="price-asc">Menor precio</option>
+                <option value="price-desc">Mayor precio</option>
+                <option value="name">Nombre A–Z</option>
+              </select>
+            </label>
             {(search || category !== "Todos") && (
               <button
                 type="button"
@@ -286,7 +314,7 @@ function App() {
             </div>
           ) : (
           <div className="products-grid">
-            {filtered.map((product, index) => (
+            {visibleProducts.map((product, index) => (
               <motion.article key={product.id} className="product-card" initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(index, 8) * 0.04 }} viewport={{ once: true }}>
                 <div className="product-image">
                   <div className={`product-device ${product.brand === "Samsung" ? "samsung" : ""}`}>
