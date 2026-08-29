@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, Menu, X, MessageCircle, MapPin, ChevronRight,
   Star, Smartphone, Laptop, Watch, Headphones, Cable,
@@ -46,6 +46,8 @@ function App() {
   const [sort, setSort] = useState("recommended");
   const [menu, setMenu] = useState(false);
   const [catalogStatus, setCatalogStatus] = useState("loading");
+  const menuButtonRef = useRef(null);
+  const navigationRef = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,8 +74,13 @@ function App() {
   useEffect(() => {
     if (!menu) return undefined;
 
+    navigationRef.current?.querySelector("a")?.focus();
+
     const closeOnEscape = (event) => {
-      if (event.key === "Escape") setMenu(false);
+      if (event.key !== "Escape") return;
+
+      setMenu(false);
+      menuButtonRef.current?.focus();
     };
 
     document.addEventListener("keydown", closeOnEscape);
@@ -163,7 +170,7 @@ function App() {
           </div>
         </a>
 
-        <nav id="main-navigation" aria-label="Navegación principal" className={menu ? "nav open" : "nav"}>
+        <nav ref={navigationRef} id="main-navigation" aria-label="Navegación principal" className={menu ? "nav open" : "nav"}>
           <a href="#inicio" onClick={() => setMenu(false)}>Inicio</a>
           <a href="#catalogo" onClick={() => setMenu(false)}>Catálogo</a>
           <a href="#servicios" onClick={() => setMenu(false)}>Servicios</a>
@@ -176,6 +183,7 @@ function App() {
             WhatsApp
           </button>
           <button
+            ref={menuButtonRef}
             type="button"
             className="menu-button"
             onClick={() => setMenu(!menu)}
