@@ -1,4 +1,5 @@
 const API_BASE_URL = (import.meta.env.VITE_COMMERCE_API_URL || "https://mac-mac-social-ai-api.onrender.com").replace(/\/$/, "");
+const CATALOG_TIMEOUT_MS = 3500;
 
 const categoryMap = {
   phone: "Telefonía",
@@ -38,22 +39,33 @@ function normalizeProduct(product) {
 }
 
 export async function fetchCommerceCatalog(signal) {
-  const response = await fetch(`${API_BASE_URL}/api/products`, {
-    method: "GET",
-    headers: { Accept: "application/json" },
-    signal,
-  });
+  const timeoutController = new AbortController();
+  const timeoutId = window.setTimeout(() => timeoutController.abort(), CATALOG_TIMEOUT_MS);
+  const abortFromCaller = () => timeoutController.abort();
 
-  if (!response.ok) {
-    throw new Error(`Commerce API respondió ${response.status}`);
+  signal?.addEventListener("abort", abortFromCaller, { once: true });
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/products`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: timeoutController.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Commerce API respondió ${response.status}`);
+    }
+
+    const payload = await response.json();
+    if (!Array.isArray(payload)) {
+      throw new Error("Formato de catálogo inválido");
+    }
+
+    return payload.map(normalizeProduct);
+  } finally {
+    window.clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", abortFromCaller);
   }
-
-  const payload = await response.json();
-  if (!Array.isArray(payload)) {
-    throw new Error("Formato de catálogo inválido");
-  }
-
-  return payload.map(normalizeProduct);
 }
 
 export function buildCommerceCategories(products) {
@@ -61,4 +73,4 @@ export function buildCommerceCategories(products) {
   return [{ name: "Todos" }, ...names.sort().map((name) => ({ name }))];
 }
 
-export { API_BASE_URL };
+export { API_BASE_URL, CATALOG_TIMEOUT_MS };
