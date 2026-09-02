@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, Menu, X, MessageCircle, MapPin, ChevronRight,
   Star, Smartphone, Laptop, Watch, Headphones, Cable,
@@ -18,6 +18,14 @@ const money = (value) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+const normalizeSearch = (value = "") =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
 const categoryIcons = {
   Todos: Star,
   iPhone: Smartphone,
@@ -35,8 +43,11 @@ function App() {
   const [products, setProducts] = useState(fallbackProducts);
   const [category, setCategory] = useState("Todos");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("recommended");
   const [menu, setMenu] = useState(false);
   const [catalogStatus, setCatalogStatus] = useState("loading");
+  const menuButtonRef = useRef(null);
+  const navigationRef = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -60,38 +71,90 @@ function App() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    if (!menu) return undefined;
+
+    navigationRef.current?.querySelector("a")?.focus();
+
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+
+      setMenu(false);
+      menuButtonRef.current?.focus();
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [menu]);
+
   const categories = useMemo(() => buildCommerceCategories(products), [products]);
 
+  const navigateCategories = (event, index) => {
+    const lastIndex = categories.length - 1;
+    const nextIndex = {
+      ArrowRight: Math.min(index + 1, lastIndex),
+      ArrowLeft: Math.max(index - 1, 0),
+      Home: 0,
+      End: lastIndex,
+    }[event.key];
+
+    if (nextIndex === undefined || nextIndex === index) return;
+    event.preventDefault();
+    setCategory(categories[nextIndex].name);
+    event.currentTarget.parentElement.children[nextIndex]?.focus();
+  };
+
   const filtered = useMemo(() => {
+    const query = normalizeSearch(search);
+
     return products.filter((product) => {
       const matchesCategory =
         category === "Todos" || product.category === category;
 
-      const text =
-        `${product.name} ${product.category} ${product.capacity} ${product.brand || ""}`.toLowerCase();
+      const text = normalizeSearch(
+        `${product.name} ${product.category} ${product.capacity} ${product.brand || ""}`
+      );
 
-      return matchesCategory && text.includes(search.toLowerCase());
+      return matchesCategory && text.includes(query);
     });
   }, [products, category, search]);
 
+  const visibleProducts = useMemo(() => {
+    if (sort === "price-asc") {
+      return [...filtered].sort((a, b) => a.price - b.price);
+    }
+
+    if (sort === "price-desc") {
+      return [...filtered].sort((a, b) => b.price - a.price);
+    }
+
+    if (sort === "name") {
+      return [...filtered].sort((a, b) =>
+        a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+      );
+    }
+
+    return filtered;
+  }, [filtered, sort]);
+
+  const openWhatsApp = (message) => {
+    const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const whatsapp = (product) => {
-    const text = encodeURIComponent(
+    openWhatsApp(
       `Hola Mac & Mac Store 👋\n\nEstoy interesado en:\n${product.name} ${product.capacity}\n\n¿Me pueden confirmar disponibilidad y precio?`
     );
-    window.open(`https://wa.me/${WHATSAPP}?text=${text}`, "_blank");
   };
 
   const generalWhatsApp = () => {
-    window.open(
-      `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
-        "Hola Mac & Mac Store 👋 Quiero información sobre sus productos."
-      )}`,
-      "_blank"
-    );
+    openWhatsApp("Hola Mac & Mac Store 👋 Quiero información sobre sus productos.");
   };
 
   return (
     <div className="app">
+      <a className="skip-link" href="#catalogo">Saltar al catálogo</a>
       <div className="announcement">
         <span>✦</span> Envíos a toda Colombia <span>•</span> Atención personalizada <span>•</span> Productos seleccionados
       </div>
@@ -99,7 +162,7 @@ function App() {
       <header className="header">
         <a className="brand" href="#inicio">
           <div className="brand-logo real-logo">
-            <img src="/mac-mac-logo.png" alt="Mac & Mac Store" />
+            <img src="/mac-mac-logo.png" alt="Mac & Mac Store" decoding="async" />
           </div>
           <div className="brand-text">
             <strong>MAC & MAC</strong>
@@ -107,7 +170,7 @@ function App() {
           </div>
         </a>
 
-        <nav className={menu ? "nav open" : "nav"}>
+        <nav ref={navigationRef} id="main-navigation" aria-label="Navegación principal" className={menu ? "nav open" : "nav"}>
           <a href="#inicio" onClick={() => setMenu(false)}>Inicio</a>
           <a href="#catalogo" onClick={() => setMenu(false)}>Catálogo</a>
           <a href="#servicios" onClick={() => setMenu(false)}>Servicios</a>
@@ -119,8 +182,16 @@ function App() {
             <MessageCircle size={18} />
             WhatsApp
           </button>
-          <button className="menu-button" onClick={() => setMenu(!menu)}>
-            {menu ? <X /> : <Menu />}
+          <button
+            ref={menuButtonRef}
+            type="button"
+            className="menu-button"
+            onClick={() => setMenu(!menu)}
+            aria-expanded={menu}
+            aria-controls="main-navigation"
+            aria-label={menu ? "Cerrar menú" : "Abrir menú"}
+          >
+            {menu ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
           </button>
         </div>
       </header>
@@ -169,15 +240,40 @@ function App() {
             </div>
             <div className="search-box">
               <Search size={19} />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar producto..." />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar producto..."
+                aria-label="Buscar productos"
+                enterKeyHint="search"
+                autoComplete="off"
+                spellCheck="false"
+              />
+              {search && (
+                <button
+                  type="button"
+                  className="search-clear"
+                  onClick={() => setSearch("")}
+                  aria-label="Limpiar búsqueda"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="categories">
-            {categories.map((item) => {
+          <div className="categories" role="group" aria-label="Filtrar productos por categoría">
+            {categories.map((item, index) => {
               const Icon = categoryIcons[item.name] || Smartphone;
               return (
-                <button key={item.name} className={category === item.name ? "category active" : "category"} onClick={() => setCategory(item.name)}>
+                <button
+                  key={item.name}
+                  className={category === item.name ? "category active" : "category"}
+                  onClick={() => setCategory(item.name)}
+                  onKeyDown={(event) => navigateCategories(event, index)}
+                  aria-pressed={category === item.name}
+                >
                   <Icon size={17} />{item.name}
                 </button>
               );
@@ -185,14 +281,49 @@ function App() {
           </div>
 
           <div className="catalog-meta">
-            <span>{filtered.length} productos disponibles</span>
-            <span className="gold-line" />
+            <span role="status" aria-live="polite" aria-atomic="true">
+              {filtered.length} productos disponibles
+            </span>
+            <span className="gold-line" aria-hidden="true" />
             <span>{catalogStatus === "live" ? "Catálogo en tiempo real" : catalogStatus === "loading" ? "Conectando catálogo…" : "Catálogo local"}</span>
+            <label className="sort-control">
+              <span>Ordenar</span>
+              <select value={sort} onChange={(event) => setSort(event.target.value)}>
+                <option value="recommended">Recomendados</option>
+                <option value="price-asc">Menor precio</option>
+                <option value="price-desc">Mayor precio</option>
+                <option value="name">Nombre A–Z</option>
+              </select>
+            </label>
+            {(search || category !== "Todos") && (
+              <button
+                type="button"
+                className="reset-filters"
+                onClick={() => { setSearch(""); setCategory("Todos"); }}
+              >
+                <X size={14} aria-hidden="true" /> Restablecer filtros
+              </button>
+            )}
           </div>
 
+          {filtered.length === 0 ? (
+            <div className="empty-catalog" role="status" aria-live="polite">
+              <Search size={28} />
+              <h3>No encontramos ese producto</h3>
+              <p>Prueba otra marca, modelo o capacidad. También podemos ayudarte directamente.</p>
+              <div className="empty-actions">
+                <button type="button" onClick={() => { setSearch(""); setCategory("Todos"); }}>
+                  Ver todo el catálogo
+                </button>
+                <button type="button" onClick={generalWhatsApp}>
+                  <MessageCircle size={16} /> Consultar por WhatsApp
+                </button>
+              </div>
+            </div>
+          ) : (
           <div className="products-grid">
-            {filtered.map((product, index) => (
-              <motion.article key={product.id} className="product-card" initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} viewport={{ once: true }}>
+            {visibleProducts.map((product, index) => (
+              <motion.article key={product.id} className="product-card" initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(index, 8) * 0.04 }} viewport={{ once: true }}>
                 <div className="product-image">
                   <div className={`product-device ${product.brand === "Samsung" ? "samsung" : ""}`}>
                     <div className="device-camera"><i /><i /><i /></div>
@@ -206,12 +337,13 @@ function App() {
                   <p>{product.capacity || product.condition || ""}</p>
                   <div className="product-bottom">
                     <strong>{money(product.price)}</strong>
-                    <button onClick={() => whatsapp(product)} aria-label="Consultar"><MessageCircle size={17} /></button>
+                    <button className="product-whatsapp" onClick={() => whatsapp(product)} aria-label={`Comprar ${product.name} por WhatsApp`}><MessageCircle size={17} /><span>Comprar por WhatsApp</span></button>
                   </div>
                 </div>
               </motion.article>
             ))}
           </div>
+          )}
         </section>
 
         <section className="premium-banner">
@@ -239,7 +371,7 @@ function App() {
       </main>
 
       <footer>
-        <div className="footer-brand"><div className="brand-logo real-logo"><img src="/mac-mac-logo.png" alt="Mac & Mac Store" /></div><div><strong>MAC & MAC STORE</strong><span>Tecnología que eleva tu estilo.</span></div></div>
+        <div className="footer-brand"><div className="brand-logo real-logo"><img src="/mac-mac-logo.png" alt="Mac & Mac Store" loading="lazy" decoding="async" /></div><div><strong>MAC & MAC STORE</strong><span>Tecnología que eleva tu estilo.</span></div></div>
         <div className="footer-links"><a href="#inicio">Inicio</a><a href="#catalogo">Catálogo</a><a href="#servicios">Servicios</a><a href="#contacto">Contacto</a></div>
         <p>© 2026 Mac & Mac Store</p>
       </footer>
