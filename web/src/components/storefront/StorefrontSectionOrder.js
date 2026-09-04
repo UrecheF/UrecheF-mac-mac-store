@@ -1,0 +1,15 @@
+export const STOREFRONT_SECTION_ORDER = [
+  'header',
+  'promotional-carousel',
+  'categories',
+  'catalog',
+  'mac-advisor',
+  'accessories',
+  'benefits',
+  'technical-service',
+  'customer-care',
+  'testimonials',
+  'social-community',
+  'newsletter',
+  'legal-footer',
+];
