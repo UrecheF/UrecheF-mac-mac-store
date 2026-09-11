@@ -127,7 +127,6 @@ export default function ProductCard({ product, index, money, onConsult }) {
                   type="button"
                   className={color.name === selectedColor?.name ? "color-swatch active" : "color-swatch"}
                   onClick={() => setColorName(color.name)}
-                  disabled={color.availability === "UNAVAILABLE"}
                   aria-label={color.name}
                   title={color.name}
                 >
