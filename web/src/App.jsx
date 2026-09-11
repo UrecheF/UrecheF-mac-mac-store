@@ -33,16 +33,13 @@ const categoryIcons = {
 };
 
 function searchableOptions(product) {
-  const variants = Array.isArray(product.variants) ? product.variants : [];
-  const variantText = variants
+  return (product.variants || [])
     .flatMap((variant) => [
       variant.capacity,
       ...(variant.colors || []).map((color) => color.name),
     ])
     .filter(Boolean)
     .join(" ");
-  const colorText = (product.colors || []).map((color) => color.name).join(" ");
-  return `${variantText} ${colorText}`;
 }
 
 function App() {
@@ -80,13 +77,22 @@ function App() {
     const query = search.trim().toLowerCase();
 
     return products.filter((product) => {
-      const matchesCategory =
-        category === "Todos" || product.category === category;
+      const matchesCategory = category === "Todos" || product.category === category;
+      if (!matchesCategory) return false;
+      if (!query) return true;
 
-      const text =
-        `${product.name} ${product.category} ${product.capacity || ""} ${product.brand || ""} ${searchableOptions(product)}`.toLowerCase();
+      const text = [
+        product.name,
+        product.category,
+        product.capacity,
+        product.brand,
+        searchableOptions(product),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-      return matchesCategory && text.includes(query);
+      return text.includes(query);
     });
   }, [products, category, search]);
 
