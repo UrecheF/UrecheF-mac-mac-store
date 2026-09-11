@@ -43,7 +43,7 @@ function capacityFromProduct(product) {
 function canonicalName(value) {
   return cleanText(value)
     .replace(/\b\d+(?:\.\d+)?\s?(?:GB|TB)\s+RAM\b/gi, "")
-    .replace(/\b(?:128|256|512|1024|2048)\s?(?:GB)\b/gi, "")
+    .replace(/\b(?:128|256|512|1024|2048)\s?GB\b/gi, "")
     .replace(/\b(?:1|2)\s?TB\b/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
@@ -200,11 +200,7 @@ function mergeCatalogProducts(products) {
   return [...groups.values()]
     .map((product) => ({
       ...product,
-      variants: [...product.variants].sort((a, b) => {
-        const aPrice = Number(a.price || 0);
-        const bPrice = Number(b.price || 0);
-        return aPrice - bPrice;
-      }),
+      variants: [...product.variants].sort((a, b) => Number(a.price || 0) - Number(b.price || 0)),
     }))
     .sort(
       (a, b) =>
