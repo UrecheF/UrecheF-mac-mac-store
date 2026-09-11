@@ -12,9 +12,9 @@ const escapeXml = (value = "") =>
 
 function fallbackProductImage(product, color) {
   const body = color?.hex || "#2b2b2b";
-  const brand = product.brand === "Samsung" ? "SAMSUNG" : "MAC & MAC";
+  const brand = product.brand === "Samsung" || product.category === "Samsung" ? "SAMSUNG" : "MAC & MAC";
   const label = escapeXml(color?.name || product.name || "Producto");
-  const isSamsung = product.brand === "Samsung";
+  const isSamsung = brand === "SAMSUNG";
   const cameraMarkup = isSamsung
     ? `
       <circle cx="84" cy="72" r="13" fill="#101010" stroke="#676767" stroke-width="3"/>
@@ -74,6 +74,17 @@ function normalizeVariants(product) {
   ];
 }
 
+function LegacyProductVisual({ product }) {
+  const samsung = product.brand === "Samsung" || product.category === "Samsung";
+
+  return (
+    <div className={`product-device ${samsung ? "samsung" : ""}`}>
+      <div className="device-camera"><i /><i /><i /></div>
+      <span>{samsung ? "S" : ""}</span>
+    </div>
+  );
+}
+
 export default function ProductCard({ product, index, money, onConsult }) {
   const variants = useMemo(() => normalizeVariants(product), [product]);
   const [variantId, setVariantId] = useState(variants[0]?.id || "");
@@ -86,6 +97,8 @@ export default function ProductCard({ product, index, money, onConsult }) {
   const price = Number(selectedColor?.price ?? selectedVariant?.price ?? product.price) || 0;
 
   const preferredImage = selectedColor?.image || selectedVariant?.image || product.image || "";
+  const hasStructuredVariants = Array.isArray(product.variants) && product.variants.length > 0;
+  const useLegacyVisual = !preferredImage && !hasStructuredVariants && colors.length === 0;
   const image = preferredImage && failedImage !== preferredImage
     ? preferredImage
     : fallbackProductImage(product, selectedColor);
@@ -114,13 +127,17 @@ export default function ProductCard({ product, index, money, onConsult }) {
       viewport={{ once: true }}
     >
       <div className="product-image variant-product-image">
-        <img
-          className="variant-product-photo"
-          src={image}
-          alt={`${product.name}${selectedColor?.name ? ` en ${selectedColor.name}` : ""}`}
-          loading="lazy"
-          onError={() => preferredImage && setFailedImage(preferredImage)}
-        />
+        {useLegacyVisual ? (
+          <LegacyProductVisual product={product} />
+        ) : (
+          <img
+            className="variant-product-photo"
+            src={image}
+            alt={`${product.name}${selectedColor?.name ? ` en ${selectedColor.name}` : ""}`}
+            loading="lazy"
+            onError={() => preferredImage && setFailedImage(preferredImage)}
+          />
+        )}
         {product.featured && <div className="product-badge">DESTACADO</div>}
       </div>
 
