@@ -114,7 +114,7 @@ function normalizeProduct(product, colorMap) {
   const embeddedColors = Array.isArray(product.colors) ? product.colors : [];
   const colors = (apiColors.length ? apiColors : embeddedColors)
     .map(normalizeColor)
-    .filter((color) => color && color.availability !== "UNAVAILABLE");
+    .filter((color) => color && ["AVAILABLE", "LOW"].includes(color.availability));
 
   const image = productImage(product);
   const available = product.active !== false && Number(product.stock ?? 1) > 0;
