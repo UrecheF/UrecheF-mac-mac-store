@@ -13,7 +13,7 @@ const escapeXml = (value = "") =>
 function fallbackProductImage(product, color) {
   const body = color?.hex || "#2b2b2b";
   const brand = product.brand === "Samsung" ? "SAMSUNG" : "MAC & MAC";
-  const label = escapeXml(color?.name || "Color disponible");
+  const label = escapeXml(color?.name || product.name || "Producto");
   const isSamsung = product.brand === "Samsung";
   const cameraMarkup = isSamsung
     ? `
@@ -61,12 +61,14 @@ function fallbackProductImage(product, color) {
 
 function normalizeVariants(product) {
   if (Array.isArray(product.variants) && product.variants.length) return product.variants;
+
   return [
     {
       id: product.id,
       capacity: product.capacity || "",
       price: Number(product.price) || 0,
       available: product.available !== false,
+      image: product.image || "",
       colors: product.colors || [],
     },
   ];
@@ -75,21 +77,31 @@ function normalizeVariants(product) {
 export default function ProductCard({ product, index, money, onConsult }) {
   const variants = useMemo(() => normalizeVariants(product), [product]);
   const [variantId, setVariantId] = useState(variants[0]?.id || "");
+  const [colorName, setColorName] = useState("");
+  const [failedImage, setFailedImage] = useState("");
+
   const selectedVariant = variants.find((variant) => variant.id === variantId) || variants[0];
   const colors = selectedVariant?.colors?.length ? selectedVariant.colors : product.colors || [];
-  const [colorName, setColorName] = useState(colors[0]?.name || "");
   const selectedColor = colors.find((color) => color.name === colorName) || colors[0];
   const price = Number(selectedColor?.price ?? selectedVariant?.price ?? product.price) || 0;
-  const image = selectedColor?.image || fallbackProductImage(product, selectedColor);
+
+  const preferredImage = selectedColor?.image || selectedVariant?.image || product.image || "";
+  const image = preferredImage && failedImage !== preferredImage
+    ? preferredImage
+    : fallbackProductImage(product, selectedColor);
+
+  const showCapacitySelector = variants.length > 1;
+  const capacityLabel = selectedVariant?.capacity || product.capacity || "";
 
   const selectVariant = (nextVariantId) => {
     const nextVariant = variants.find((variant) => variant.id === nextVariantId) || variants[0];
     const nextColors = nextVariant?.colors?.length ? nextVariant.colors : product.colors || [];
+
     setVariantId(nextVariantId);
     setColorName((currentColor) =>
       nextColors.some((color) => color.name === currentColor)
         ? currentColor
-        : nextColors[0]?.name || ""
+        : ""
     );
   };
 
@@ -107,6 +119,7 @@ export default function ProductCard({ product, index, money, onConsult }) {
           src={image}
           alt={`${product.name}${selectedColor?.name ? ` en ${selectedColor.name}` : ""}`}
           loading="lazy"
+          onError={() => preferredImage && setFailedImage(preferredImage)}
         />
         {product.featured && <div className="product-badge">DESTACADO</div>}
       </div>
@@ -115,25 +128,29 @@ export default function ProductCard({ product, index, money, onConsult }) {
         <span className="product-category">{product.category}</span>
         <h3>{product.name}</h3>
 
-        <div className="variant-group">
-          <div className="variant-heading">
-            <span>Capacidad</span>
-            <strong>{selectedVariant?.capacity || "Única"}</strong>
+        {showCapacitySelector ? (
+          <div className="variant-group">
+            <div className="variant-heading">
+              <span>Capacidad</span>
+              <strong>{capacityLabel}</strong>
+            </div>
+            <div className="capacity-options" role="group" aria-label={`Capacidad para ${product.name}`}>
+              {variants.map((variant) => (
+                <button
+                  key={variant.id}
+                  type="button"
+                  className={variant.id === selectedVariant?.id ? "capacity-chip active" : "capacity-chip"}
+                  onClick={() => selectVariant(variant.id)}
+                  disabled={variant.available === false}
+                >
+                  {variant.capacity || "Única"}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="capacity-options" role="group" aria-label={`Capacidad para ${product.name}`}>
-            {variants.map((variant) => (
-              <button
-                key={variant.id}
-                type="button"
-                className={variant.id === selectedVariant?.id ? "capacity-chip active" : "capacity-chip"}
-                onClick={() => selectVariant(variant.id)}
-                disabled={variant.available === false}
-              >
-                {variant.capacity || "Única"}
-              </button>
-            ))}
-          </div>
-        </div>
+        ) : (
+          capacityLabel && <p className="single-capacity">{capacityLabel}</p>
+        )}
 
         {colors.length > 0 && (
           <div className="variant-group color-group">
@@ -144,7 +161,7 @@ export default function ProductCard({ product, index, money, onConsult }) {
             <div className="color-options" role="group" aria-label={`Color para ${product.name}`}>
               {colors.map((color) => (
                 <button
-                  key={color.name}
+                  key={color.key || color.name}
                   type="button"
                   className={color.name === selectedColor?.name ? "color-swatch active" : "color-swatch"}
                   onClick={() => setColorName(color.name)}
@@ -168,7 +185,7 @@ export default function ProductCard({ product, index, money, onConsult }) {
             onClick={() =>
               onConsult(product, {
                 variantId: selectedVariant?.id,
-                capacity: selectedVariant?.capacity || "",
+                capacity: capacityLabel,
                 color: selectedColor?.name || "",
                 price,
               })
