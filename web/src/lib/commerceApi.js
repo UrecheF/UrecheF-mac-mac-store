@@ -71,9 +71,9 @@ function absoluteMediaUrl(value) {
 }
 
 function productImage(product) {
-  if (typeof product.image === "string") return absoluteMediaUrl(product.image);
-  if (typeof product.imageUrl === "string") return absoluteMediaUrl(product.imageUrl);
-  if (typeof product.thumbnail === "string") return absoluteMediaUrl(product.thumbnail);
+  if (typeof product.image === "string" && product.image) return absoluteMediaUrl(product.image);
+  if (typeof product.imageUrl === "string" && product.imageUrl) return absoluteMediaUrl(product.imageUrl);
+  if (typeof product.thumbnail === "string" && product.thumbnail) return absoluteMediaUrl(product.thumbnail);
 
   if (Array.isArray(product.images) && product.images.length) {
     const first = product.images[0];
@@ -81,6 +81,7 @@ function productImage(product) {
   }
 
   const sku = cleanText(product.sku);
+  if (product.hasMedia === false) return "";
   return sku ? `${API_BASE_URL}/api/media/public/${encodeURIComponent(sku)}` : "";
 }
 
@@ -127,6 +128,7 @@ function normalizeProduct(product, colorMap) {
     category,
     condition: cleanText(product.condition || "NEW"),
     image,
+    hasMedia: product.hasMedia,
     available,
     featured: Boolean(product.featured),
     featuredPriority: Number(product.featuredPriority ?? 100),
@@ -220,9 +222,20 @@ async function fetchJson(path, signal) {
   return response.json();
 }
 
+async function fetchProducts(signal) {
+  try {
+    const optimized = await fetchJson("/api/storefront-products", signal);
+    if (Array.isArray(optimized)) return optimized;
+  } catch (error) {
+    if (error?.name === "AbortError") throw error;
+  }
+
+  return fetchJson("/api/products", signal);
+}
+
 export async function fetchCommerceCatalog(signal) {
   const [productsResult, colorsResult] = await Promise.allSettled([
-    fetchJson("/api/products", signal),
+    fetchProducts(signal),
     fetchJson("/api/product-colors", signal),
   ]);
 
