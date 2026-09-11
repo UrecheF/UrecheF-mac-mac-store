@@ -1,5 +1,3 @@
-import { products as variantProfiles } from "../data/products";
-
 const API_BASE_URL = (import.meta.env.VITE_COMMERCE_API_URL || "https://mac-mac-social-ai-api.onrender.com").replace(/\/$/, "");
 
 const categoryMap = {
@@ -11,131 +9,136 @@ const categoryMap = {
   scooter: "Movilidad",
 };
 
-const colorHexMap = {
-  negro: "#202124",
-  black: "#202124",
-  blanco: "#f1f0eb",
-  white: "#f1f0eb",
-  plata: "#d7d5d0",
-  silver: "#d7d5d0",
-  naranja: "#d96f45",
-  orange: "#d96f45",
-  azul: "#6f91a9",
-  blue: "#6f91a9",
-  gris: "#9b9b98",
-  gray: "#9b9b98",
-  grey: "#9b9b98",
-  lavanda: "#c9bfdc",
-  lavender: "#c9bfdc",
-  salvia: "#aab7a1",
-  sage: "#aab7a1",
-  oro: "#e1d2b5",
-  gold: "#e1d2b5",
-};
+function cleanText(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeCapacityPart(value) {
+  const raw = cleanText(value);
+  if (!raw) return "";
+
+  if (/^\d+(?:\.\d+)?$/.test(raw)) {
+    const numeric = Number(raw);
+    return numeric >= 1024 ? `${numeric / 1024} TB` : `${numeric} GB`;
+  }
+
+  return raw
+    .replace(/(\d)\s*(tb|gb)\b/gi, (_, amount, unit) => `${amount} ${unit.toUpperCase()}`)
+    .replace(/\s+/g, " ");
+}
 
 function capacityFromProduct(product) {
-  const parts = [];
-  const ram = Number(product.ramGb ?? product.ramGB ?? product.ram);
-  const storage = Number(product.storageGb ?? product.storageGB ?? product.storage);
+  const ram = normalizeCapacityPart(product.ramGb ?? product.ramGB ?? product.ram);
+  const storage = normalizeCapacityPart(product.storageGb ?? product.storageGB ?? product.storage);
 
-  if (ram) parts.push(`${ram} GB RAM`);
-  if (storage) parts.push(storage >= 1024 ? `${storage / 1024} TB` : `${storage} GB`);
+  if (ram && storage) return `${ram} RAM · ${storage}`;
+  if (storage) return storage;
+  if (ram) return `${ram} RAM`;
 
-  if (parts.length) return parts.join(" · ");
-
-  const name = String(product.name || "");
-  const match = name.match(/\b(128|256|512)\s?GB\b|\b(1|2)\s?TB\b/i);
-  return match?.[0]?.replace(/\s+/g, " ") || product.capacity || "";
+  const name = cleanText(product.name);
+  const match = name.match(/\b(?:128|256|512|1024|2048)\s?GB\b|\b(?:1|2)\s?TB\b/i);
+  return match ? normalizeCapacityPart(match[0]) : normalizeCapacityPart(product.capacity);
 }
 
 function canonicalName(value) {
-  return String(value || "Producto Mac & Mac")
-    .replace(/\b\d+\s?GB\s+RAM\b/gi, "")
-    .replace(/\b(?:128|256|512)\s?GB\b/gi, "")
+  return cleanText(value)
+    .replace(/\b\d+(?:\.\d+)?\s?(?:GB|TB)\s+RAM\b/gi, "")
+    .replace(/\b(?:128|256|512|1024|2048)\s?(?:GB)\b/gi, "")
     .replace(/\b(?:1|2)\s?TB\b/gi, "")
-    .replace(/[·|/-]\s*(?:SIM|eSIM)\b/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
 
-function profileKey(value) {
-  return canonicalName(value)
-    .toLowerCase()
-    .replace(/iphone 17 air/g, "iphone air")
-    .replace(/[^a-z0-9áéíóúñ]+/g, " ")
-    .trim();
+function productKey(product) {
+  return [
+    product.category,
+    product.brand,
+    product.condition || "NEW",
+    canonicalName(product.name).toLowerCase(),
+  ].join("|");
 }
 
-function inferredHex(name) {
-  const normalized = String(name || "").toLowerCase();
-  const key = Object.keys(colorHexMap).find((item) => normalized.includes(item));
-  return key ? colorHexMap[key] : "#c9c9c9";
+function capacityKey(value) {
+  return normalizeCapacityPart(value).toLowerCase().replace(/\s+/g, "");
 }
 
-function normalizeColor(color, fallbackImage) {
-  if (!color) return null;
-
-  if (typeof color === "string") {
-    return { name: color, hex: inferredHex(color), image: fallbackImage || undefined };
-  }
-
-  const name = color.name || color.label || color.color || color.finish;
-  if (!name) return null;
-
-  return {
-    name,
-    hex: color.hex || color.hexCode || color.value || inferredHex(name),
-    image: color.image || color.imageUrl || color.thumbnail || fallbackImage || undefined,
-    price: color.price != null ? Number(color.price) : undefined,
-  };
+function absoluteMediaUrl(value) {
+  const url = cleanText(value);
+  if (!url) return "";
+  if (/^https:\/\//i.test(url) || /^data:image\//i.test(url)) return url;
+  if (url.startsWith("/")) return `${API_BASE_URL}${url}`;
+  return url;
 }
 
 function productImage(product) {
-  if (typeof product.image === "string") return product.image;
-  if (typeof product.imageUrl === "string") return product.imageUrl;
-  if (typeof product.thumbnail === "string") return product.thumbnail;
+  if (typeof product.image === "string") return absoluteMediaUrl(product.image);
+  if (typeof product.imageUrl === "string") return absoluteMediaUrl(product.imageUrl);
+  if (typeof product.thumbnail === "string") return absoluteMediaUrl(product.thumbnail);
+
   if (Array.isArray(product.images) && product.images.length) {
     const first = product.images[0];
-    return typeof first === "string" ? first : first?.url || first?.imageUrl;
+    return absoluteMediaUrl(typeof first === "string" ? first : first?.url || first?.imageUrl);
   }
-  return undefined;
+
+  const sku = cleanText(product.sku);
+  return sku ? `${API_BASE_URL}/api/media/public/${encodeURIComponent(sku)}` : "";
 }
 
-function colorsFromProduct(product) {
-  const image = productImage(product);
-  const source = Array.isArray(product.colors)
-    ? product.colors
-    : [product.colorName || product.color || product.finish].filter(Boolean);
+function normalizeColor(color) {
+  if (!color) return null;
 
-  return source.map((color) => normalizeColor(color, image)).filter(Boolean);
+  if (typeof color === "string") {
+    return { name: color, hex: "#c9c9c9", image: "", availability: "AVAILABLE" };
+  }
+
+  const name = cleanText(color.name || color.label || color.color || color.finish);
+  if (!name) return null;
+
+  return {
+    key: cleanText(color.key),
+    name,
+    hex: cleanText(color.swatch || color.hex || color.hexCode || color.value) || "#c9c9c9",
+    image: absoluteMediaUrl(color.imageUrl || color.image || color.thumbnail),
+    availability: cleanText(color.availability || "AVAILABLE").toUpperCase(),
+  };
 }
 
-function normalizeProduct(product) {
+function normalizeProduct(product, colorMap) {
   let category = categoryMap[product.category] || product.category || "Otros";
   if (product.category === "phone" && product.brand === "Apple") category = "iPhone";
   if (product.category === "phone" && product.brand === "Samsung") category = "Samsung";
 
-  const name = canonicalName(product.name);
-  const capacity = capacityFromProduct(product);
-  const colors = colorsFromProduct(product);
+  const sku = cleanText(product.sku);
+  const apiColors = sku && Array.isArray(colorMap?.[sku]) ? colorMap[sku] : [];
+  const embeddedColors = Array.isArray(product.colors) ? product.colors : [];
+  const colors = (apiColors.length ? apiColors : embeddedColors)
+    .map(normalizeColor)
+    .filter((color) => color && color.availability !== "UNAVAILABLE");
+
+  const image = productImage(product);
   const available = product.active !== false && Number(product.stock ?? 1) > 0;
-  const price = Number(product.price) || 0;
 
   return {
     id: String(product.id),
     sourceId: String(product.id),
-    name,
-    brand: product.brand || "",
+    sku,
+    name: canonicalName(product.name) || "Producto Mac & Mac",
+    brand: cleanText(product.brand),
     category,
+    condition: cleanText(product.condition || "NEW"),
+    image,
     available,
-    featured: false,
-    colors,
+    featured: Boolean(product.featured),
+    featuredPriority: Number(product.featuredPriority ?? 100),
     variants: [
       {
         id: String(product.id),
-        capacity,
-        price,
+        sku,
+        capacity: capacityFromProduct(product),
+        price: Number(product.price) || 0,
+        stock: Number(product.stock ?? 0),
         available,
+        image,
         colors,
       },
     ],
@@ -144,98 +147,101 @@ function normalizeProduct(product) {
 
 function mergeColors(current = [], incoming = []) {
   const merged = new Map();
-  [...current, ...incoming].forEach((color) => {
-    if (!color?.name) return;
-    const key = color.name.toLowerCase();
-    merged.set(key, { ...merged.get(key), ...color });
-  });
+
+  for (const color of [...current, ...incoming]) {
+    if (!color?.name) continue;
+    const key = (color.key || color.name).toLowerCase();
+    const previous = merged.get(key) || {};
+    merged.set(key, {
+      ...previous,
+      ...color,
+      image: color.image || previous.image || "",
+    });
+  }
+
   return [...merged.values()];
 }
 
 function mergeCatalogProducts(products) {
   const groups = new Map();
 
-  products.forEach((product) => {
-    const key = `${product.category}|${product.brand}|${profileKey(product.name)}`;
+  for (const product of products) {
+    const key = productKey(product);
     const existing = groups.get(key);
 
     if (!existing) {
       groups.set(key, { ...product, variants: [...product.variants] });
-      return;
+      continue;
     }
 
-    product.variants.forEach((variant) => {
-      const capacityKey = String(variant.capacity || "Única").toLowerCase();
+    for (const variant of product.variants) {
       const same = existing.variants.find(
-        (item) => String(item.capacity || "Única").toLowerCase() === capacityKey
+        (item) => capacityKey(item.capacity) === capacityKey(variant.capacity)
       );
 
-      if (same) {
-        same.colors = mergeColors(same.colors, variant.colors);
-        same.available = same.available || variant.available;
-        if (!same.price && variant.price) same.price = variant.price;
-      } else {
+      if (!same) {
         existing.variants.push(variant);
+        continue;
       }
-    });
 
-    existing.colors = mergeColors(existing.colors, product.colors);
+      same.colors = mergeColors(same.colors, variant.colors);
+      same.available = same.available || variant.available;
+      same.stock = Math.max(Number(same.stock || 0), Number(variant.stock || 0));
+      same.image = same.image || variant.image;
+      if (!same.price && variant.price) same.price = variant.price;
+    }
+
+    existing.image = existing.image || product.image;
     existing.available = existing.available || product.available;
-  });
+    existing.featured = existing.featured || product.featured;
+    existing.featuredPriority = Math.min(existing.featuredPriority, product.featuredPriority);
+  }
 
-  return [...groups.values()];
-}
-
-function applyVariantProfiles(products) {
-  const profiles = new Map(variantProfiles.map((product) => [profileKey(product.name), product]));
-
-  return products.map((product) => {
-    const profile = profiles.get(profileKey(product.name));
-    if (!profile) return product;
-
-    const profileVariants = new Map(
-      (profile.variants || []).map((variant) => [String(variant.capacity || "").toLowerCase(), variant])
-    );
-
-    const variants = product.variants.map((variant) => {
-      const matchingProfile = profileVariants.get(String(variant.capacity || "").toLowerCase());
-      const profileColors = matchingProfile?.colors?.length
-        ? matchingProfile.colors
-        : profile.colors || [];
-
-      return {
-        ...variant,
-        colors: variant.colors?.length ? variant.colors : profileColors,
-      };
-    });
-
-    return {
+  return [...groups.values()]
+    .map((product) => ({
       ...product,
-      id: profile.id || product.id,
-      featured: profile.featured ?? product.featured,
-      colors: product.colors?.length ? product.colors : profile.colors || [],
-      variants,
-    };
-  });
+      variants: [...product.variants].sort((a, b) => {
+        const aPrice = Number(a.price || 0);
+        const bPrice = Number(b.price || 0);
+        return aPrice - bPrice;
+      }),
+    }))
+    .sort(
+      (a, b) =>
+        Number(b.featured) - Number(a.featured) ||
+        Number(a.featuredPriority || 100) - Number(b.featuredPriority || 100)
+    );
 }
 
-export async function fetchCommerceCatalog(signal) {
-  const response = await fetch(`${API_BASE_URL}/api/products`, {
+async function fetchJson(path, signal) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     method: "GET",
     headers: { Accept: "application/json" },
     signal,
   });
 
-  if (!response.ok) {
-    throw new Error(`Commerce API respondió ${response.status}`);
+  if (!response.ok) throw new Error(`${path} respondió ${response.status}`);
+  return response.json();
+}
+
+export async function fetchCommerceCatalog(signal) {
+  const [productsResult, colorsResult] = await Promise.allSettled([
+    fetchJson("/api/products", signal),
+    fetchJson("/api/product-colors", signal),
+  ]);
+
+  if (productsResult.status !== "fulfilled" || !Array.isArray(productsResult.value)) {
+    throw productsResult.reason || new Error("Formato de catálogo inválido");
   }
 
-  const payload = await response.json();
-  if (!Array.isArray(payload)) {
-    throw new Error("Formato de catálogo inválido");
-  }
+  const colorMap =
+    colorsResult.status === "fulfilled" && colorsResult.value?.colors
+      ? colorsResult.value.colors
+      : {};
 
-  return applyVariantProfiles(mergeCatalogProducts(payload.map(normalizeProduct)));
+  return mergeCatalogProducts(
+    productsResult.value.map((product) => normalizeProduct(product, colorMap))
+  );
 }
 
 export function buildCommerceCategories(products) {
