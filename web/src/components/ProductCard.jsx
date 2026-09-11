@@ -2,63 +2,6 @@ import { useMemo, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
-const escapeXml = (value = "") =>
-  String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
-
-function fallbackProductImage(product, color) {
-  const body = color?.hex || "#2b2b2b";
-  const brand = product.brand === "Samsung" || product.category === "Samsung" ? "SAMSUNG" : "MAC & MAC";
-  const label = escapeXml(color?.name || product.name || "Producto");
-  const isSamsung = brand === "SAMSUNG";
-  const cameraMarkup = isSamsung
-    ? `
-      <circle cx="84" cy="72" r="13" fill="#101010" stroke="#676767" stroke-width="3"/>
-      <circle cx="84" cy="108" r="13" fill="#101010" stroke="#676767" stroke-width="3"/>
-      <circle cx="84" cy="144" r="13" fill="#101010" stroke="#676767" stroke-width="3"/>
-      <circle cx="116" cy="91" r="9" fill="#171717" stroke="#777" stroke-width="2"/>
-    `
-    : `
-      <rect x="66" y="52" width="78" height="78" rx="23" fill="rgba(20,20,20,.32)"/>
-      <circle cx="88" cy="76" r="14" fill="#101010" stroke="#626262" stroke-width="3"/>
-      <circle cx="121" cy="76" r="14" fill="#101010" stroke="#626262" stroke-width="3"/>
-      <circle cx="104" cy="108" r="14" fill="#101010" stroke="#626262" stroke-width="3"/>
-    `;
-
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="520" height="620" viewBox="0 0 520 620">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#fbfbfb"/>
-          <stop offset="1" stop-color="#ecebe8"/>
-        </linearGradient>
-        <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#ffffff" stop-opacity=".38"/>
-          <stop offset=".28" stop-color="${body}"/>
-          <stop offset="1" stop-color="#111111" stop-opacity=".3"/>
-        </linearGradient>
-        <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#000" flood-opacity=".24"/>
-        </filter>
-      </defs>
-      <rect width="520" height="620" rx="38" fill="url(#bg)"/>
-      <ellipse cx="260" cy="530" rx="126" ry="28" fill="#000" opacity=".08"/>
-      <g transform="translate(146 54) rotate(5 114 245)" filter="url(#shadow)">
-        <rect x="0" y="0" width="228" height="490" rx="48" fill="url(#body)" stroke="#ffffff" stroke-opacity=".38" stroke-width="3"/>
-        ${cameraMarkup}
-        <text x="114" y="266" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#111" opacity=".58">${brand}</text>
-      </g>
-      <text x="260" y="578" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#222">${label}</text>
-    </svg>
-  `;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
-
 function normalizeVariants(product) {
   if (Array.isArray(product.variants) && product.variants.length) return product.variants;
 
@@ -95,16 +38,12 @@ export default function ProductCard({ product, index, money, onConsult }) {
   const colors = selectedVariant?.colors?.length ? selectedVariant.colors : product.colors || [];
   const selectedColor = colors.find((color) => color.name === colorName) || colors[0];
   const price = Number(selectedColor?.price ?? selectedVariant?.price ?? product.price) || 0;
+  const capacityLabel = selectedVariant?.capacity || product.capacity || "";
 
   const imageCandidates = [selectedColor?.image, selectedVariant?.image, product.image]
     .filter(Boolean)
     .filter((image, position, all) => all.indexOf(image) === position);
   const preferredImage = imageCandidates.find((image) => !failedImages.includes(image)) || "";
-  const useLegacyVisual = imageCandidates.length === 0 && colors.length === 0;
-  const image = preferredImage || fallbackProductImage(product, selectedColor);
-
-  const showCapacitySelector = variants.length > 1;
-  const capacityLabel = selectedVariant?.capacity || product.capacity || "";
 
   const selectVariant = (nextVariantId) => {
     const nextVariant = variants.find((variant) => variant.id === nextVariantId) || variants[0];
@@ -112,9 +51,7 @@ export default function ProductCard({ product, index, money, onConsult }) {
 
     setVariantId(nextVariantId);
     setColorName((currentColor) =>
-      nextColors.some((color) => color.name === currentColor)
-        ? currentColor
-        : ""
+      nextColors.some((color) => color.name === currentColor) ? currentColor : ""
     );
   };
 
@@ -134,16 +71,17 @@ export default function ProductCard({ product, index, money, onConsult }) {
       viewport={{ once: true }}
     >
       <div className="product-image variant-product-image">
-        {useLegacyVisual ? (
-          <LegacyProductVisual product={product} />
-        ) : (
+        {preferredImage ? (
           <img
             className="variant-product-photo"
-            src={image}
+            src={preferredImage}
             alt={`${product.name}${selectedColor?.name ? ` en ${selectedColor.name}` : ""}`}
             loading="lazy"
+            decoding="async"
             onError={markImageFailed}
           />
+        ) : (
+          <LegacyProductVisual product={product} />
         )}
         {product.featured && <div className="product-badge">DESTACADO</div>}
       </div>
@@ -152,7 +90,7 @@ export default function ProductCard({ product, index, money, onConsult }) {
         <span className="product-category">{product.category}</span>
         <h3>{product.name}</h3>
 
-        {showCapacitySelector ? (
+        {variants.length > 1 ? (
           <div className="variant-group">
             <div className="variant-heading">
               <span>Capacidad</span>
@@ -189,6 +127,7 @@ export default function ProductCard({ product, index, money, onConsult }) {
                   type="button"
                   className={color.name === selectedColor?.name ? "color-swatch active" : "color-swatch"}
                   onClick={() => setColorName(color.name)}
+                  disabled={color.availability === "UNAVAILABLE"}
                   aria-label={color.name}
                   title={color.name}
                 >
