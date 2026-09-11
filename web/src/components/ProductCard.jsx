@@ -89,19 +89,19 @@ export default function ProductCard({ product, index, money, onConsult }) {
   const variants = useMemo(() => normalizeVariants(product), [product]);
   const [variantId, setVariantId] = useState(variants[0]?.id || "");
   const [colorName, setColorName] = useState("");
-  const [failedImage, setFailedImage] = useState("");
+  const [failedImages, setFailedImages] = useState([]);
 
   const selectedVariant = variants.find((variant) => variant.id === variantId) || variants[0];
   const colors = selectedVariant?.colors?.length ? selectedVariant.colors : product.colors || [];
   const selectedColor = colors.find((color) => color.name === colorName) || colors[0];
   const price = Number(selectedColor?.price ?? selectedVariant?.price ?? product.price) || 0;
 
-  const preferredImage = selectedColor?.image || selectedVariant?.image || product.image || "";
-  const hasStructuredVariants = Array.isArray(product.variants) && product.variants.length > 0;
-  const useLegacyVisual = !preferredImage && !hasStructuredVariants && colors.length === 0;
-  const image = preferredImage && failedImage !== preferredImage
-    ? preferredImage
-    : fallbackProductImage(product, selectedColor);
+  const imageCandidates = [selectedColor?.image, selectedVariant?.image, product.image]
+    .filter(Boolean)
+    .filter((image, position, all) => all.indexOf(image) === position);
+  const preferredImage = imageCandidates.find((image) => !failedImages.includes(image)) || "";
+  const useLegacyVisual = imageCandidates.length === 0 && colors.length === 0;
+  const image = preferredImage || fallbackProductImage(product, selectedColor);
 
   const showCapacitySelector = variants.length > 1;
   const capacityLabel = selectedVariant?.capacity || product.capacity || "";
@@ -115,6 +115,13 @@ export default function ProductCard({ product, index, money, onConsult }) {
       nextColors.some((color) => color.name === currentColor)
         ? currentColor
         : ""
+    );
+  };
+
+  const markImageFailed = () => {
+    if (!preferredImage) return;
+    setFailedImages((current) =>
+      current.includes(preferredImage) ? current : [...current, preferredImage]
     );
   };
 
@@ -135,7 +142,7 @@ export default function ProductCard({ product, index, money, onConsult }) {
             src={image}
             alt={`${product.name}${selectedColor?.name ? ` en ${selectedColor.name}` : ""}`}
             loading="lazy"
-            onError={() => preferredImage && setFailedImage(preferredImage)}
+            onError={markImageFailed}
           />
         )}
         {product.featured && <div className="product-badge">DESTACADO</div>}
