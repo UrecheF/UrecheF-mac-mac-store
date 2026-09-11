@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -78,23 +78,20 @@ export default function ProductCard({ product, index, money, onConsult }) {
   const selectedVariant = variants.find((variant) => variant.id === variantId) || variants[0];
   const colors = selectedVariant?.colors?.length ? selectedVariant.colors : product.colors || [];
   const [colorName, setColorName] = useState(colors[0]?.name || "");
-
-  useEffect(() => {
-    const firstVariant = variants[0];
-    setVariantId(firstVariant?.id || "");
-    const nextColors = firstVariant?.colors?.length ? firstVariant.colors : product.colors || [];
-    setColorName(nextColors[0]?.name || "");
-  }, [product.id]);
-
-  useEffect(() => {
-    if (!colors.some((color) => color.name === colorName)) {
-      setColorName(colors[0]?.name || "");
-    }
-  }, [variantId, colors, colorName]);
-
   const selectedColor = colors.find((color) => color.name === colorName) || colors[0];
   const price = Number(selectedColor?.price ?? selectedVariant?.price ?? product.price) || 0;
   const image = selectedColor?.image || fallbackProductImage(product, selectedColor);
+
+  const selectVariant = (nextVariantId) => {
+    const nextVariant = variants.find((variant) => variant.id === nextVariantId) || variants[0];
+    const nextColors = nextVariant?.colors?.length ? nextVariant.colors : product.colors || [];
+    setVariantId(nextVariantId);
+    setColorName((currentColor) =>
+      nextColors.some((color) => color.name === currentColor)
+        ? currentColor
+        : nextColors[0]?.name || ""
+    );
+  };
 
   return (
     <motion.article
@@ -129,7 +126,7 @@ export default function ProductCard({ product, index, money, onConsult }) {
                 key={variant.id}
                 type="button"
                 className={variant.id === selectedVariant?.id ? "capacity-chip active" : "capacity-chip"}
-                onClick={() => setVariantId(variant.id)}
+                onClick={() => selectVariant(variant.id)}
                 disabled={variant.available === false}
               >
                 {variant.capacity || "Única"}
@@ -167,6 +164,7 @@ export default function ProductCard({ product, index, money, onConsult }) {
             <strong>{money(price)}</strong>
           </div>
           <button
+            type="button"
             onClick={() =>
               onConsult(product, {
                 variantId: selectedVariant?.id,
