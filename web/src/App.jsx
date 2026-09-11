@@ -4,10 +4,11 @@ import {
   Star, Smartphone, Laptop, Watch, Headphones, Cable,
   Gem, RefreshCcw, ShieldCheck, Truck, Camera, Tablet
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { products as fallbackProducts } from "./data/products";
+import ProductCard from "./components/ProductCard";
 import { buildCommerceCategories, fetchCommerceCatalog } from "./lib/commerceApi";
 import "./index.css";
+import "./variants.css";
 
 const WHATSAPP = "573202781315";
 
@@ -30,6 +31,19 @@ const categoryIcons = {
   Accesorios: Cable,
   Movilidad: Smartphone,
 };
+
+function searchableOptions(product) {
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const variantText = variants
+    .flatMap((variant) => [
+      variant.capacity,
+      ...(variant.colors || []).map((color) => color.name),
+    ])
+    .filter(Boolean)
+    .join(" ");
+  const colorText = (product.colors || []).map((color) => color.name).join(" ");
+  return `${variantText} ${colorText}`;
+}
 
 function App() {
   const [products, setProducts] = useState(fallbackProducts);
@@ -63,20 +77,27 @@ function App() {
   const categories = useMemo(() => buildCommerceCategories(products), [products]);
 
   const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
     return products.filter((product) => {
       const matchesCategory =
         category === "Todos" || product.category === category;
 
       const text =
-        `${product.name} ${product.category} ${product.capacity} ${product.brand || ""}`.toLowerCase();
+        `${product.name} ${product.category} ${product.capacity || ""} ${product.brand || ""} ${searchableOptions(product)}`.toLowerCase();
 
-      return matchesCategory && text.includes(search.toLowerCase());
+      return matchesCategory && text.includes(query);
     });
   }, [products, category, search]);
 
-  const whatsapp = (product) => {
+  const whatsapp = (product, selection = {}) => {
+    const capacity = selection.capacity || product.capacity || "Por confirmar";
+    const color = selection.color || "Por confirmar";
+    const price = Number(selection.price ?? product.price) || 0;
+    const priceLine = price ? `\nPrecio mostrado: ${money(price)}` : "";
+
     const text = encodeURIComponent(
-      `Hola Mac & Mac Store 👋\n\nEstoy interesado en:\n${product.name} ${product.capacity}\n\n¿Me pueden confirmar disponibilidad y precio?`
+      `Hola Mac & Mac Store 👋\n\nEstoy interesado en:\n${product.name}\nCapacidad: ${capacity}\nColor: ${color}${priceLine}\n\n¿Me pueden confirmar disponibilidad?`
     );
     window.open(`https://wa.me/${WHATSAPP}?text=${text}`, "_blank");
   };
@@ -192,24 +213,13 @@ function App() {
 
           <div className="products-grid">
             {filtered.map((product, index) => (
-              <motion.article key={product.id} className="product-card" initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} viewport={{ once: true }}>
-                <div className="product-image">
-                  <div className={`product-device ${product.brand === "Samsung" ? "samsung" : ""}`}>
-                    <div className="device-camera"><i /><i /><i /></div>
-                    <span>{product.brand === "Samsung" ? "S" : ""}</span>
-                  </div>
-                  {product.featured && <div className="product-badge">DESTACADO</div>}
-                </div>
-                <div className="product-info">
-                  <span className="product-category">{product.category}</span>
-                  <h3>{product.name}</h3>
-                  <p>{product.capacity || product.condition || ""}</p>
-                  <div className="product-bottom">
-                    <strong>{money(product.price)}</strong>
-                    <button onClick={() => whatsapp(product)} aria-label="Consultar"><MessageCircle size={17} /></button>
-                  </div>
-                </div>
-              </motion.article>
+              <ProductCard
+                key={product.id}
+                product={product}
+                index={index}
+                money={money}
+                onConsult={whatsapp}
+              />
             ))}
           </div>
         </section>
